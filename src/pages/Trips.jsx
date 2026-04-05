@@ -5,31 +5,59 @@ import { Spinner } from "../components/ui/Spinner";
 import { TripCard } from "../components/trips/TripCard";
 import { CreateTripModal } from "../components/trips/CreateTripModal";
 import { useTrips } from "../hooks/useTrips";
+import { api } from "../api/client";
+import { Input } from "../components/ui/Input";
 
 export function Trips({ token, onOpenTrip }) {
   const { trips, loading, error, loadMyTrips, createTrip } = useTrips(token);
   const [showCreate, setShowCreate] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
   const [tab,        setTab]        = useState("my"); // "my" | "public"
   const [publicTrips, setPublicTrips] = useState([]);
   const [pubLoading,  setPubLoading]  = useState(false);
+  const [joinToken, setJoinToken] = useState("");
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState("");
+  const [joinSuccess, setJoinSuccess] = useState("");
 
   useEffect(() => { loadMyTrips(); }, [loadMyTrips]);
 
   useEffect(() => {
     if (tab !== "public") return;
     setPubLoading(true);
-    import("../api/client").then(({ api }) =>
-      api.getPublicTrips()
-        .then(d => setPublicTrips(Array.isArray(d) ? d : []))
-        .catch(() => {})
-        .finally(() => setPubLoading(false))
-    );
+        api.getPublicTrips()
+      .then(d => setPublicTrips(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setPubLoading(false));
   }, [tab]);
 
   const handleCreate = async data => {
     await createTrip(data);
     setShowCreate(false);
   };
+
+  const handleJoinTrip = async e => {
+    e.preventDefault();
+    if (!joinToken.trim()) {
+      setJoinError("Invite token is required.");
+      return;
+    }
+
+    setJoinError("");
+    setJoinSuccess("");
+    setJoinLoading(true);
+    try {
+      await api.acceptInvite(joinToken.trim(), token);
+      await loadMyTrips();
+      setJoinSuccess("Trip joined successfully.");
+      setJoinToken("");
+    } catch (err) {
+      setJoinError(err.message);
+    } finally {
+      setJoinLoading(false);
+    }
+  };
+
 
   const displayed = tab === "my" ? trips : publicTrips;
   const isLoading = tab === "my" ? loading : pubLoading;
@@ -48,6 +76,12 @@ export function Trips({ token, onOpenTrip }) {
           style={{ ...S.btnSm, padding: "10px 18px", fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}
         >
           <Icon.Plus /> New trip
+        </button>
+        <button
+          onClick={() => { setShowJoin(true); setJoinError(""); setJoinSuccess(""); }}
+          style={{ ...S.btnSecondary, padding: "10px 18px", fontSize: 13, marginLeft: 8 }}
+        >
+          Join trip
         </button>
       </div>
 
@@ -109,6 +143,55 @@ export function Trips({ token, onOpenTrip }) {
 
       {showCreate && (
         <CreateTripModal onClose={() => setShowCreate(false)} onCreate={handleCreate} />
+      )}
+       {showJoin && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.28)",
+            display: "grid",
+            placeItems: "center",
+            zIndex: 1000,
+            padding: 20,
+          }}
+        >
+          <div style={{ ...S.card, width: "min(520px, 100%)" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Join a trip</div>
+            <div style={{ fontSize: 13, color: "#6b6b62", marginBottom: 14 }}>
+              Paste the invite token shared by the organizer.
+            </div>
+
+            {joinError && <div style={{ ...S.error, marginBottom: 10 }}>{joinError}</div>}
+            {joinSuccess && (
+              <div style={{ marginBottom: 10, background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", borderRadius: 8, padding: "10px 12px", fontSize: 12 }}>
+                {joinSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleJoinTrip}>
+              <Input
+                label="Invite token"
+                value={joinToken}
+                onChange={setJoinToken}
+                placeholder="Paste token here"
+                autoFocus
+              />
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="submit" style={{ ...S.btnPrimary, fontSize: 12, padding: "9px 16px" }} disabled={joinLoading}>
+                  {joinLoading ? <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Spinner /> Joining…</span> : "Join trip"}
+                </button>
+                <button
+                  type="button"
+                  style={{ ...S.btnSecondary, fontSize: 12, padding: "9px 14px" }}
+                  onClick={() => { setShowJoin(false); setJoinError(""); setJoinSuccess(""); }}
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

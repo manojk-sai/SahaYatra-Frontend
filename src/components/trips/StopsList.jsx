@@ -18,7 +18,7 @@ const STATUS_COLORS = {
   REJECTED:  { color: "#dc2626", label: "Rejected"  },
 };
 
-function AddStopForm({ onAdd, onCancel }) {
+function AddStopForm({ onAdd, onCancel, isOrganizer }) {
   const [form, setForm] = useState({
     name: "", location: "", category: "ACTIVITY",
     visitDate: "", durationHours: "", estimatedCost: "", notes: "", mustVisit: false,
@@ -77,10 +77,12 @@ function AddStopForm({ onAdd, onCancel }) {
             <input value={form.notes} onChange={e => set("notes")(e.target.value)} placeholder="Optional notes" style={{ ...S.input, fontSize: 13 }} />
           </div>
         </div>
+        {isOrganizer && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <input type="checkbox" id="mustVisit" checked={form.mustVisit} onChange={e => set("mustVisit")(e.target.checked)} style={{ width: 14, height: 14, cursor: "pointer" }} />
           <label htmlFor="mustVisit" style={{ fontSize: 12, color: "#6b6b62", cursor: "pointer" }}>Mark as must-visit (non-voteable)</label>
         </div>
+        )}
         <div style={{ display: "flex", gap: 8 }}>
           <button type="submit" style={{ ...S.btnPrimary, fontSize: 12, padding: "9px 16px" }} disabled={loading}>
             {loading ? <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Spinner /> Adding…</span> : "Add stop"}
@@ -181,7 +183,7 @@ export function StopsList({ stops = [], isContributor, onAddStop, onRemoveStop }
         })}
       </div>
 
-      {showForm && <AddStopForm onAdd={handleAdd} onCancel={() => setShowForm(false)} />}
+      {showForm && <AddStopForm onAdd={handleAdd} onCancel={() => setShowForm(false)} isOrganizer={isContributor} />}
     </div>
   );
 }

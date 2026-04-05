@@ -96,7 +96,7 @@ export function MembersList({ members = [], isOrganizer, currentUserId, onInvite
 
           <form onSubmit={handleInvite}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "flex-end" }}>
-              <Input label="User ID" value={userId} onChange={setUserId} placeholder="MongoDB user ID" autoFocus />
+              <Input label="User ID" value={userId} onChange={setUserId} placeholder="username" autoFocus />
               <div style={S.inputWrap}>
                 <label style={S.label}>Role</label>
                 <select value={role} onChange={e => setRole(e.target.value)} style={{ ...S.input, fontSize: 13 }}>

@@ -23,14 +23,14 @@ export function Nav({ user, screen, onNav, onLogout }) {
 
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ fontSize: 13, color: "#6b6b62" }}>
-          {user?.profile?.displayName || user?.email || "User"}
+          { user?.username || "User"}
         </div>
         <div style={{
           width: 32, height: 32, borderRadius: "50%",
           background: "#1a1a18", display: "flex", alignItems: "center",
           justifyContent: "center", color: "white", fontSize: 13, fontWeight: 700,
         }}>
-          {(user?.profile?.displayName || user?.email || "U")[0].toUpperCase()}
+          {(user?.username || "U")[0].toUpperCase()}
         </div>
         <button
           onClick={onLogout}

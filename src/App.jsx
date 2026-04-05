@@ -5,6 +5,8 @@ import { LoginScreen } from "./pages/LoginScreen";
 import { RegisterScreen } from "./pages/RegisterScreen";
 import { Dashboard } from "./pages/Dashboard";
 import { Profile } from "./pages/Profile";
+import { Trips } from "./pages/Trips";
+import { TripDetail } from "./pages/TripDetail";
 
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem("rw_token") || "");
@@ -51,7 +53,11 @@ export default function App() {
   if (screen === "register") return <RegisterScreen onLogin={handleLogin} onGoLogin={() => setScreen("login")} />;
 
   // ── Authenticated shell ───────────────────────────────
-  const currentUserId = user?.id || user?._id || "";
+  const currentUserRef = {
+    id: user?.id || user?._id || user?.userId || "",
+    username: user?.username || "",
+    email: user?.email || "",
+  };
 
   return (
     <div style={S.page}>
@@ -63,7 +69,7 @@ export default function App() {
         <TripDetail
           token={token}
           tripId={activeTripId}
-          currentUserId={currentUserId}
+          currentUserRef={currentUserRef}
           onBack={closeTrip} />
         )
       }

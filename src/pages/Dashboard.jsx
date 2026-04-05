@@ -34,7 +34,7 @@ export function Dashboard({ user, token, onNav }) {
       {/* Welcome */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.6px", marginBottom: 4 }}>
-          Good day, {user?.profile?.displayName || user?.email?.split("@")[0] || "traveler"} 👋
+          Good day, {user?.username || "traveler"} 👋
         </div>
         <div style={{ fontSize: 14, color: "#6b6b62" }}>Phase 2 complete — trips, stops, and membership are live.</div>
       </div>

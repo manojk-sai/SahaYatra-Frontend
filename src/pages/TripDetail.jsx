@@ -15,7 +15,7 @@ const STATUS_STYLES = {
   ARCHIVED:    { bg: "#f3f4f6", color: "#6b7280", label: "Archived"    },
 };
 
-export function TripDetail({ tripId, token, currentUserId, onBack }) {
+export function TripDetail({ tripId, token, currentUserRef, onBack }) {
   const [trip,    setTrip]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
@@ -45,8 +45,21 @@ export function TripDetail({ tripId, token, currentUserId, onBack }) {
 
   if (!trip) return null;
 
-  const myMembership  = (trip.members || []).find(m => m.userId === currentUserId && m.active);
-  const isOrganizer   = myMembership?.role === "ORGANIZER";
+  const identityCandidates = [
+    currentUserRef?.id,
+    currentUserRef?.username,
+    currentUserRef?.email,
+  ]
+    .filter(Boolean)
+    .map(v => String(v).toLowerCase());
+
+  const myMembership = (trip.members || []).find(m => {
+    if (!m.active) return false;
+    const memberKeys = [m.userId, m.username, m.email]
+      .filter(Boolean)
+      .map(v => String(v).toLowerCase());
+    return memberKeys.some(k => identityCandidates.includes(k));
+  });  const isOrganizer   = myMembership?.role === "ORGANIZER";
   const isContributor = ["ORGANIZER", "CONTRIBUTOR"].includes(myMembership?.role);
   const ss            = STATUS_STYLES[trip.status] || STATUS_STYLES.PLANNING;
   const nextStatus    = STATUS_FLOW[STATUS_FLOW.indexOf(trip.status) + 1];
@@ -184,7 +197,7 @@ export function TripDetail({ tripId, token, currentUserId, onBack }) {
           <MembersList
             members={trip.members || []}
             isOrganizer={isOrganizer}
-            currentUserId={currentUserId}
+            currentUserId={currentUserRef?.id || currentUserRef?.username || ""}
             onInvite={handleInvite}
           />
         )}
