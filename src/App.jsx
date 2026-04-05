@@ -16,7 +16,7 @@ export default function App() {
     const hasUser = !!localStorage.getItem("rw_user");
     return (hasToken && hasUser) ? "dashboard" : "login";
   });
-
+  const [activeTripId, setActiveTripId] = useState(null);
   const handleLogin = (tok, usr) => {
     setToken(tok);
     setUser(usr);
@@ -36,15 +36,37 @@ export default function App() {
     setUser(updated);
     localStorage.setItem("rw_user", JSON.stringify(updated));
   };
+  const openTrip = tripId => {
+    setActiveTripId(tripId);
+    setScreen("tripDetail");
+  };
 
+  const closeTrip = () => {
+    setActiveTripId(null);
+    setScreen("trips");
+  };
+
+  // ── Unauthenticated ───────────────────────────────────
   if (screen === "login") return <LoginScreen onLogin={handleLogin} onGoRegister={() => setScreen("register")} />;
   if (screen === "register") return <RegisterScreen onLogin={handleLogin} onGoLogin={() => setScreen("login")} />;
+
+  // ── Authenticated shell ───────────────────────────────
+  const currentUserId = user?.id || user?._id || "";
 
   return (
     <div style={S.page}>
       <style>{`* { box-sizing: border-box; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <Nav user={user} screen={screen} onNav={setScreen} onLogout={handleLogout} />
       {screen === "dashboard" && <Dashboard user={user} token={token} />}
+      {screen === "trips" && <Trips token={token} onOpenTrip={openTrip} />}
+      {screen == "tripDetail" && activeTripId && (
+        <TripDetail
+          token={token}
+          tripId={activeTripId}
+          currentUserId={currentUserId}
+          onBack={closeTrip} />
+        )
+      }
       {screen === "profile" && <Profile user={user} token={token} onUserUpdate={handleUserUpdate} />}
     </div>
   );
