@@ -94,9 +94,19 @@ function AddStopForm({ onAdd, onCancel, isOrganizer }) {
   );
 }
 
-export function StopsList({ stops = [], isContributor, onAddStop, onRemoveStop }) {
+export function StopsList({ 
+  stops = [],
+  isContributor,
+  isOrganizer,
+  canVote,
+  currentUserRef,
+  onAddStop,
+  onRemoveStop,
+  onVoteStop,
+}) {
   const [showForm,  setShowForm]  = useState(false);
   const [removing,  setRemoving]  = useState(null);
+  const [voting,   setVoting]   = useState(null);
 
   const handleAdd = async data => {
     await onAddStop(data);
@@ -107,6 +117,16 @@ export function StopsList({ stops = [], isContributor, onAddStop, onRemoveStop }
     setRemoving(stopId);
     try { await onRemoveStop(stopId); }
     finally { setRemoving(null); }
+  };
+
+  const handleVote = async (stopId, voteType) => {
+    if (!onVoteStop) return;
+    setVoting(`${stopId}-${voteType}`);
+    try {
+      await onVoteStop(stopId, voteType);
+    } finally {
+      setVoting(null);
+    }
   };
 
   const sorted = [...stops].sort((a, b) => a.visitOrder - b.visitOrder);
@@ -140,6 +160,22 @@ export function StopsList({ stops = [], isContributor, onAddStop, onRemoveStop }
         {sorted.map((stop, i) => {
           const catStyle = CATEGORY_COLORS[stop.category] || CATEGORY_COLORS.OTHER;
           const stStatus = STATUS_COLORS[stop.status]     || STATUS_COLORS.PROPOSED;
+          const votesUp = stop.votesUp ?? stop.upVotes ?? stop.upvotes ?? 0;
+          const votesDown = stop.votesDown ?? stop.downVotes ?? stop.downvotes ?? 0;
+          const score = stop.voteScore ?? stop.score ?? (votesUp - votesDown);
+          const voterKeys = [
+            currentUserRef?.id,
+            currentUserRef?.username,
+            currentUserRef?.email,
+          ]
+            .filter(Boolean)
+            .map(v => String(v).toLowerCase());
+          const votedByMe = (stop.votes || []).find(v => {
+            const keys = [v.userId, v.username, v.email]
+              .filter(Boolean)
+              .map(value => String(value).toLowerCase());
+            return keys.some(key => voterKeys.includes(key));
+          })?.voteType;
           return (
             <div key={stop.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: "#fafaf8", borderRadius: 10, border: "1px solid #f0f0eb" }}>
               {/* Order badge */}
@@ -164,8 +200,32 @@ export function StopsList({ stops = [], isContributor, onAddStop, onRemoveStop }
                   {stop.estimatedCost != null && <span>${parseFloat(stop.estimatedCost).toFixed(2)}</span>}
                 </div>
                 {stop.notes && <div style={{ fontSize: 11, color: "#6b6b62", marginTop: 4, fontStyle: "italic" }}>{stop.notes}</div>}
-              </div>
-              {/* Remove */}
+                {!stop.mustVisit && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, color: "#6b6b62" }}>
+                      Votes: <strong style={{ color: "#1a1a18" }}>{score}</strong>
+                    </span>
+                    <span style={{ fontSize: 10, color: "#9ca3af" }}>👍 {votesUp} · 👎 {votesDown}</span>
+                    {canVote && (
+                      <>
+                        <button
+                          onClick={() => handleVote(stop.id, "UPVOTE")}
+                          disabled={Boolean(voting)}
+                          style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "UPVOTE" ? "#dcfce7" : undefined }}
+                        >
+                          {voting === `${stop.id}-UPVOTE` ? "Voting…" : "👍 Upvote"}
+                        </button>
+                        <button
+                          onClick={() => handleVote(stop.id, "DOWNVOTE")}
+                          disabled={Boolean(voting)}
+                          style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "DOWNVOTE" ? "#fee2e2" : undefined }}
+                        >
+                          {voting === `${stop.id}-DOWNVOTE` ? "Voting…" : "👎 Downvote"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}              </div>
               {isContributor && !stop.mustVisit && (
                 <button
                   onClick={() => handleRemove(stop.id)}
@@ -183,7 +243,7 @@ export function StopsList({ stops = [], isContributor, onAddStop, onRemoveStop }
         })}
       </div>
 
-      {showForm && <AddStopForm onAdd={handleAdd} onCancel={() => setShowForm(false)} isOrganizer={isContributor} />}
+      {showForm && <AddStopForm onAdd={handleAdd} onCancel={() => setShowForm(false)} isOrganizer={isOrganizer} />}
     </div>
   );
 }

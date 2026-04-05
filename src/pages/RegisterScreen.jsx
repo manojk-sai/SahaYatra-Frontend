@@ -40,11 +40,11 @@ export function RegisterScreen({ onLogin, onGoLogin }) {
     setLoading(true);
     try {
       // Sending data to your POST /auth/register endpoint
-      const data = await api.post("/auth/register", {
+      const data = await api.register( {
         username: form.username,
         password: form.password,
-        fullname: form.fullname, // Optional
-        city: form.city,         // Optional
+        fullname: form.fullname,
+        city: form.city,
         zipcode: form.zipcode,
       });
       // Auto-login after successful registration

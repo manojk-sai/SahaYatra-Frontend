@@ -8,7 +8,7 @@ import { useTrips } from "../hooks/useTrips";
 import { api } from "../api/client";
 import { Input } from "../components/ui/Input";
 
-export function Trips({ token, onOpenTrip }) {
+export function Trips({ token, currentUserRef, onOpenTrip }) {
   const { trips, loading, error, loadMyTrips, createTrip } = useTrips(token);
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
@@ -25,8 +25,11 @@ export function Trips({ token, onOpenTrip }) {
   useEffect(() => {
     if (tab !== "public") return;
     setPubLoading(true);
-        api.getPublicTrips()
-      .then(d => setPublicTrips(Array.isArray(d) ? d : []))
+      api.getPublicTrips()
+      .then(d => {
+        const allPublic = Array.isArray(d) ? d : [];
+        setPublicTrips(allPublic.filter(trip => trip.visibility === "public"));
+      })
       .catch(() => {})
       .finally(() => setPubLoading(false));
   }, [tab]);
@@ -58,7 +61,25 @@ export function Trips({ token, onOpenTrip }) {
     }
   };
 
+  const myIdentity = [
+    currentUserRef?.id,
+    currentUserRef?.username,
+  ]
+    .filter(Boolean)
+    .map(value => String(value).toLowerCase());
 
+  const myTrips = trips.filter(trip => {
+    const members = Array.isArray(trip.members) ? trip.members : [];
+    if(members.length === 0) return false;
+    return members.some(member => {
+      const active = member.active !== false;
+      if (!active) return false;
+      const keys = [member.userId, member.username]
+        .filter(Boolean)
+        .map(v => String(v).toLowerCase());
+      return keys.some(k => myIdentity.includes(k));
+    });
+  });
   const displayed = tab === "my" ? trips : publicTrips;
   const isLoading = tab === "my" ? loading : pubLoading;
 
@@ -136,7 +157,12 @@ export function Trips({ token, onOpenTrip }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {displayed.map(trip => (
-            <TripCard key={trip.id} trip={trip} onOpen={() => onOpenTrip(trip.id)} />
+            <TripCard
+              key={trip.id}
+              trip={trip}
+              onOpen={() => onOpenTrip(trip.id)}
+              disabled={tab == "public" && trip.visibility !== "PUBLIC"}
+            />
           ))}
         </div>
       )}

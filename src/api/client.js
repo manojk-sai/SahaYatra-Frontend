@@ -61,6 +61,9 @@ export const api = {
   async reorderStops(tripId, orderedIds, token) {
     return request("PATCH", `/trips/${tripId}/stops/reorder`, orderedIds, token);
   },
+  async voteStop(tripId, stopId, voteType, token) {
+    return request("POST", `/trips/${tripId}/stops/${stopId}/vote`, { voteType }, token);
+  },
 
   // ── Phase 2: Members ─────────────────────────────────
   async inviteMember(tripId, userId, role, token) {

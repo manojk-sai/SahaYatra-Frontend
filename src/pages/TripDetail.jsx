@@ -54,12 +54,13 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
     .map(v => String(v).toLowerCase());
 
   const myMembership = (trip.members || []).find(m => {
-    if (!m.active) return false;
+    if (m.active == false) return false;
     const memberKeys = [m.userId, m.username, m.email]
       .filter(Boolean)
       .map(v => String(v).toLowerCase());
     return memberKeys.some(k => identityCandidates.includes(k));
-  });  const isOrganizer   = myMembership?.role === "ORGANIZER";
+  });
+  const isOrganizer   = myMembership?.role === "ORGANIZER";
   const isContributor = ["ORGANIZER", "CONTRIBUTOR"].includes(myMembership?.role);
   const ss            = STATUS_STYLES[trip.status] || STATUS_STYLES.PLANNING;
   const nextStatus    = STATUS_FLOW[STATUS_FLOW.indexOf(trip.status) + 1];
@@ -77,6 +78,11 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
 
   const handleInvite = async (userId, role) => {
     return api.inviteMember(trip.id, userId, role, token);
+  };
+
+  const handleVote = async (stopId, voteType) => {
+    const updated = await api.voteStop(trip.id, stopId, voteType, token);
+    setTrip(updated);
   };
 
   const handleAdvance = async () => {
@@ -146,7 +152,7 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
             <Icon.MapPin /> {(trip.stops || []).length} stops
           </span>
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <Icon.Users /> {(trip.members || []).filter(m => m.active).length} members
+            <Icon.Users /> {(trip.members || []).filter(m => m.active !== false).length} members
           </span>
           {totalCost > 0 && (
             <span>Est. total: <strong style={{ color: "#1a1a18" }}>${totalCost.toFixed(2)}</strong></span>
@@ -164,7 +170,7 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
       <div style={{ display: "flex", gap: 2, marginBottom: 16, background: "#f0f0eb", borderRadius: 9, padding: 3, width: "fit-content" }}>
         {[
           { key: "stops",   label: `Stops (${(trip.stops || []).length})`                       },
-          { key: "members", label: `Members (${(trip.members || []).filter(m => m.active).length})` },
+          { key: "members", label: `Members (${(trip.members || []).filter(m => m.active !== false).length})` },
         ].map(t => (
           <button
             key={t.key}
@@ -189,8 +195,12 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
           <StopsList
             stops={trip.stops || []}
             isContributor={isContributor && !trip.locked}
+            isOrganizer={isOrganizer && !trip.locked}
+            canVote={isContributor && !trip.locked}
+            currentUserRef={currentUserRef}
             onAddStop={handleAddStop}
             onRemoveStop={handleRemoveStop}
+            onVoteStop={handleVote}
           />
         )}
         {tab === "members" && (

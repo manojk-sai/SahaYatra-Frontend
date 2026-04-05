@@ -15,17 +15,18 @@ const VISIBILITY_LABELS = {
   PUBLIC:      "Public",
 };
 
-export function TripCard({ trip, onOpen }) {
+export function TripCard({ trip, onOpen, disabled = false }) {
   const ss        = STATUS_STYLES[trip.status] || STATUS_STYLES.PLANNING;
-  const activeM   = (trip.members || []).filter(m => m.active).length;
+  const activeM   = (trip.members || []).filter(m => m.active !== false).length;
   const stopCount = (trip.stops  || []).length;
 
   return (
     <div
-      onClick={onOpen}
+      onClick={() => { if (!disabled) onOpen(); }}
       style={{
         ...S.card,
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.72 : 1,
         transition: "border-color 0.15s, box-shadow 0.15s",
         display: "flex",
         flexDirection: "column",

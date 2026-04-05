@@ -64,7 +64,7 @@ export default function App() {
       <style>{`* { box-sizing: border-box; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <Nav user={user} screen={screen} onNav={setScreen} onLogout={handleLogout} />
       {screen === "dashboard" && <Dashboard user={user} token={token} />}
-      {screen === "trips" && <Trips token={token} onOpenTrip={openTrip} />}
+      {screen === "trips" && <Trips token={token} currentUserRef={currentUserRef} onOpenTrip={openTrip} />}
       {screen == "tripDetail" && activeTripId && (
         <TripDetail
           token={token}

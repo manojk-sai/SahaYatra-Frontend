@@ -18,7 +18,7 @@ export function MembersList({ members = [], isOrganizer, currentUserId, onInvite
   const [error,      setError]      = useState("");
   const [token,      setToken]      = useState("");
 
-  const activeMembers = members.filter(m => m.active);
+  const activeMembers = members.filter(m => m.active !== false);
 
   const handleInvite = async e => {
     e.preventDefault();
