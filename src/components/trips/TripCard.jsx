@@ -14,6 +14,11 @@ const VISIBILITY_LABELS = {
   INVITE_ONLY: "Invite only",
   PUBLIC:      "Public",
 };
+const VOTING_MODE_LABELS = {
+  MAJORITY: "Majority",
+  UNANIMOUS: "Unanimous",
+  ORGANIZER: "Organizer",
+};
 
 export function TripCard({ trip, onOpen, disabled = false }) {
   const ss        = STATUS_STYLES[trip.status] || STATUS_STYLES.PLANNING;
@@ -77,7 +82,7 @@ export function TripCard({ trip, onOpen, disabled = false }) {
           <Icon.Users /> {activeM} member{activeM !== 1 ? "s" : ""}
         </span>
         <span style={{ marginLeft: "auto", fontSize: 11, color: "#c0c0b8" }}>
-          {VISIBILITY_LABELS[trip.visibility]}
+          {VOTING_MODE_LABELS[trip.votingMode] || "Majority"}. {VISIBILITY_LABELS[trip.visibility]}
         </span>
       </div>
     </div>

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { S } from "../../styles/theme";
 import { Icon } from "../ui/Icons";
 import { Input } from "../ui/Input";
 import { Spinner } from "../ui/Spinner";
-
+import { api } from "../../api/client";
 const CATEGORY_COLORS = {
   ACCOMMODATION: { bg: "#eff6ff", color: "#1d4ed8" },
   FOOD:          { bg: "#fef9c3", color: "#a16207" },
@@ -100,6 +100,8 @@ export function StopsList({
   isOrganizer,
   canVote,
   currentUserRef,
+  tripId,
+  token,
   onAddStop,
   onRemoveStop,
   onVoteStop,
@@ -107,6 +109,33 @@ export function StopsList({
   const [showForm,  setShowForm]  = useState(false);
   const [removing,  setRemoving]  = useState(null);
   const [voting,   setVoting]   = useState(null);
+  const [voteTallies, setVoteTallies] = useState({}); // { stopId: { up: 0, down: 0 } }
+
+    useEffect(() => {
+    let isCancelled = false;
+    const loadTallies = async () => {
+      if (!tripId || !token || stops.length === 0) {
+        setVoteTallies({});
+        return;
+      }
+      const tallyEntries = await Promise.all(
+        stops.map(async stop => {
+          if (stop.mustVisit) return [stop.id, null];
+          try {
+            const tally = await api.getStopVotes(tripId, stop.id, token);
+            return [stop.id, tally];
+          } catch {
+            return [stop.id, null];
+          }
+        })
+      );
+      if (!isCancelled) setVoteTallies(Object.fromEntries(tallyEntries));
+    };
+    loadTallies();
+    return () => {
+      isCancelled = true;
+    };
+  }, [stops, tripId, token]);
 
   const handleAdd = async data => {
     await onAddStop(data);
@@ -124,6 +153,10 @@ export function StopsList({
     setVoting(`${stopId}-${voteType}`);
     try {
       await onVoteStop(stopId, voteType);
+      if(tripId && token){
+        const updated = await api.getStopVotes(tripId, stopId, token);
+        setVoteTallies(prev => ({ ...prev, [stopId]: updated }));
+      }
     } finally {
       setVoting(null);
     }
@@ -159,10 +192,11 @@ export function StopsList({
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {sorted.map((stop, i) => {
           const catStyle = CATEGORY_COLORS[stop.category] || CATEGORY_COLORS.OTHER;
-          const stStatus = STATUS_COLORS[stop.status]     || STATUS_COLORS.PROPOSED;
-          const votesUp = stop.votesUp ?? stop.upVotes ?? stop.upvotes ?? 0;
-          const votesDown = stop.votesDown ?? stop.downVotes ?? stop.downvotes ?? 0;
-          const score = stop.voteScore ?? stop.score ?? (votesUp - votesDown);
+          const stStatus = STATUS_COLORS[stop.stopStatus]     || STATUS_COLORS.PROPOSED;
+          const tally = voteTallies[stop.id];
+          const approveCount = tally?.approveCount ?? 0;
+          const rejectCount = tally?.rejectCount ?? 0;
+          const abstainCount = tally?.abstainCount ?? 0;
           const voterKeys = [
             currentUserRef?.id,
             currentUserRef?.username,
@@ -170,12 +204,15 @@ export function StopsList({
           ]
             .filter(Boolean)
             .map(v => String(v).toLowerCase());
-          const votedByMe = (stop.votes || []).find(v => {
+          const fallBackVote = (stop.votes || []).find(v => {
             const keys = [v.userId, v.username, v.email]
               .filter(Boolean)
               .map(value => String(value).toLowerCase());
             return keys.some(key => voterKeys.includes(key));
           })?.voteType;
+          const votedByMe = tally?.currentUserVoteType || fallBackVote;
+          const hasVoted = tally?.hasCurrentUserVoted ?? Boolean(votedByMe);
+          const currentStatus = tally?.stopStatus || stop.stopStatus;
           return (
             <div key={stop.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: "#fafaf8", borderRadius: 10, border: "1px solid #f0f0eb" }}>
               {/* Order badge */}
@@ -191,7 +228,7 @@ export function StopsList({
                   <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 10, background: catStyle.bg, color: catStyle.color }}>
                     {stop.category.charAt(0) + stop.category.slice(1).toLowerCase()}
                   </span>
-                  <span style={{ fontSize: 10, color: stStatus.color, fontWeight: 600 }}>{stStatus.label}</span>
+                  <span style={{ fontSize: 10, color: stStatus.color, fontWeight: 600 }}>{(STATUS_COLORS[currentStatus] || stStatus).label}</span>
                 </div>
                 <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#9ca3af", flexWrap: "wrap" }}>
                   {stop.location     && <span style={{ display: "flex", alignItems: "center", gap: 3 }}><Icon.MapPin />{stop.location}</span>}
@@ -203,24 +240,33 @@ export function StopsList({
                 {!stop.mustVisit && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11, color: "#6b6b62" }}>
-                      Votes: <strong style={{ color: "#1a1a18" }}>{score}</strong>
+                      Votes:
+                      <strong style={{ color: "#1a1a18" }}> {approveCount}</strong> approve ·
+                      <strong style={{ color: "#1a1a18" }}> {rejectCount}</strong> reject ·
+                      <strong style={{ color: "#1a1a18" }}> {abstainCount}</strong> abstain
                     </span>
-                    <span style={{ fontSize: 10, color: "#9ca3af" }}>👍 {votesUp} · 👎 {votesDown}</span>
-                    {canVote && (
+                    {hasVoted && <span style={{ fontSize: 10, color: "#16a34a" }}>You already voted</span>}                    {canVote && (
                       <>
                         <button
-                          onClick={() => handleVote(stop.id, "UPVOTE")}
-                          disabled={Boolean(voting)}
-                          style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "UPVOTE" ? "#dcfce7" : undefined }}
+                          onClick={() => handleVote(stop.id, "APPROVE")}
+                          disabled={Boolean(voting) || hasVoted}
+                          style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "APPROVE" ? "#dcfce7" : undefined }}
                         >
-                          {voting === `${stop.id}-UPVOTE` ? "Voting…" : "👍 Upvote"}
+                          {voting === `${stop.id}-APPROVE` ? "Voting…" : "✅ Approve"}
                         </button>
                         <button
-                          onClick={() => handleVote(stop.id, "DOWNVOTE")}
-                          disabled={Boolean(voting)}
-                          style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "DOWNVOTE" ? "#fee2e2" : undefined }}
+                          onClick={() => handleVote(stop.id, "REJECT")}
+                          disabled={Boolean(voting) || hasVoted}
+                          style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "REJECT" ? "#fee2e2" : undefined }}
                         >
-                          {voting === `${stop.id}-DOWNVOTE` ? "Voting…" : "👎 Downvote"}
+                          {voting === `${stop.id}-REJECT` ? "Voting…" : "❌ Reject"}
+                        </button>
+                        <button
+                          onClick={() => handleVote(stop.id, "ABSTAIN")}
+                          disabled={Boolean(voting) || hasVoted}
+                          style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "ABSTAIN" ? "#e5e7eb" : undefined }}
+                        >
+                          {voting === `${stop.id}-ABSTAIN` ? "Voting…" : "➖ Abstain"}
                         </button>
                       </>
                     )}

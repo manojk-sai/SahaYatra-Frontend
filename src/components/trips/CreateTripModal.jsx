@@ -7,7 +7,7 @@ import { Spinner } from "../ui/Spinner";
 export function CreateTripModal({ onClose, onCreate }) {
   const [form, setForm] = useState({
     title: "", description: "", startDate: "", endDate: "",
-    budgetCap: "", visibility: "INVITE_ONLY",
+    budgetCap: "", visibility: "INVITE_ONLY", votingMode: "MAJORITY",
   });
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");
@@ -28,6 +28,7 @@ export function CreateTripModal({ onClose, onCreate }) {
         endDate:     form.endDate,
         budgetCap:   form.budgetCap ? parseFloat(form.budgetCap) : undefined,
         visibility:  form.visibility,
+        votingMode:  form.votingMode,
       });
       onClose();
     } catch (err) {
@@ -80,7 +81,14 @@ export function CreateTripModal({ onClose, onCreate }) {
               </select>
             </div>
           </div>
-
+          <div style={S.inputWrap}>
+            <label style={S.label}>Voting mode</label>
+            <select value={form.votingMode} onChange={e => set("votingMode")(e.target.value)} style={{ ...S.input }}>
+              <option value="MAJORITY">Majority</option>
+              <option value="UNANIMOUS">Unanimous</option>
+              <option value="ORGANIZER">Organizer decides</option>
+            </select>
+          </div>
           <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
             <button type="submit" style={S.btnPrimary} disabled={loading}>
               {loading ? <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}><Spinner /> Creating…</span> : "Create trip"}

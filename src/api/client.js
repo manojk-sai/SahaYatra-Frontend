@@ -61,9 +61,6 @@ export const api = {
   async reorderStops(tripId, orderedIds, token) {
     return request("PATCH", `/trips/${tripId}/stops/reorder`, orderedIds, token);
   },
-  async voteStop(tripId, stopId, voteType, token) {
-    return request("POST", `/trips/${tripId}/stops/${stopId}/vote`, { voteType }, token);
-  },
 
   // ── Phase 2: Members ─────────────────────────────────
   async inviteMember(tripId, userId, role, token) {
@@ -77,5 +74,13 @@ export const api = {
   },
   async transferOwnership(tripId, newOrganizerId, token) {
     return request("POST", `/trips/${tripId}/transfer`, { newOrganizerId }, token);
+  },
+
+  // ── Phase 3: Voting ─────────────────────────────────
+  async voteStop(tripId, stopId, voteType, token) {
+    return request("POST", `/trips/${tripId}/stops/${stopId}/vote`, { voteType }, token);
+  },
+  async getStopVotes(tripId, stopId, token) {
+    return request("GET", `/trips/${tripId}/stops/${stopId}/votes`, null, token);
   },
 };

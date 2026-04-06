@@ -15,6 +15,12 @@ const STATUS_STYLES = {
   ARCHIVED:    { bg: "#f3f4f6", color: "#6b7280", label: "Archived"    },
 };
 
+const VOTING_MODE_LABELS = {
+  MAJORITY: "Majority",
+  UNANIMOUS: "Unanimous",
+  ORGANIZER: "Organizer",
+};
+
 export function TripDetail({ tripId, token, currentUserRef, onBack }) {
   const [trip,    setTrip]    = useState(null);
   const [loading, setLoading] = useState(true);
@@ -160,6 +166,7 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
           {trip.budgetCap && (
             <span>Budget cap: <strong style={{ color: totalCost > trip.budgetCap ? "#dc2626" : "#16a34a" }}>${parseFloat(trip.budgetCap).toFixed(2)}</strong></span>
           )}
+          <span>Voting: <strong style={{ color: "#1a1a18" }}>{VOTING_MODE_LABELS[trip.votingMode] || "Majority"}</strong></span>
           <span style={{ marginLeft: "auto", fontSize: 11, color: "#c0c0b8", fontStyle: "italic" }}>
             {myMembership ? `You are ${myMembership.role.toLowerCase()}` : "View only"}
           </span>
@@ -198,6 +205,8 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
             isOrganizer={isOrganizer && !trip.locked}
             canVote={isContributor && !trip.locked}
             currentUserRef={currentUserRef}
+            tripId={trip.id}
+            token={token}
             onAddStop={handleAddStop}
             onRemoveStop={handleRemoveStop}
             onVoteStop={handleVote}
