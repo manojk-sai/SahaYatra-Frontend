@@ -7,6 +7,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Profile } from "./pages/Profile";
 import { Trips } from "./pages/Trips";
 import { TripDetail } from "./pages/TripDetail";
+import { Footer } from "./components/ui/Footer";
 
 export default function App() {
   const [token, setToken] = useState(() => localStorage.getItem("rw_token") || "");

@@ -18,6 +18,18 @@ const STATUS_COLORS = {
   REJECTED:  { color: "#dc2626", label: "Rejected"  },
 };
 
+function weatherEmoji(condition) {
+  if (!condition) return null;
+  const c = condition.toLowerCase();
+  if (c.includes("clear") || c.includes("sunny")) return "☀️";
+  if (c.includes("cloud") || c.includes("overcast")) return "☁️";
+  if (c.includes("rain") || c.includes("drizzle") || c.includes("shower")) return "🌧️";
+  if (c.includes("thunder") || c.includes("storm")) return "⛈️";
+  if (c.includes("snow") || c.includes("sleet") || c.includes("hail")) return "❄️";
+  if (c.includes("mist") || c.includes("fog") || c.includes("haze")) return "🌫️";
+  return "🌡️";
+}
+
 function AddStopForm({ onAdd, onCancel, isOrganizer }) {
   const [form, setForm] = useState({
     name: "", location: "", category: "ACTIVITY",
@@ -163,7 +175,24 @@ export function StopsList({
   };
 
   const sorted = [...stops].sort((a, b) => a.visitOrder - b.visitOrder);
+  const formatWeatherDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const getSuffix = (n) => {
+      if (n > 3 && n < 21) return 'th';
+      switch (n % 10) {
+        case 1:  return "st";
+        case 2:  return "nd";
+        case 3:  return "rd";
+        default: return "th";
+      }
+    };
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
 
+    return `${day}${getSuffix(day)} of ${month} at: ${hours}:${minutes}`;
+  };
   return (
     <div>
       {/* Header */}
@@ -192,7 +221,6 @@ export function StopsList({
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {sorted.map((stop, i) => {
           const catStyle = CATEGORY_COLORS[stop.category] || CATEGORY_COLORS.OTHER;
-          const stStatus = STATUS_COLORS[stop.stopStatus]     || STATUS_COLORS.PROPOSED;
           const tally = voteTallies[stop.id];
           const approveCount = tally?.approveCount ?? 0;
           const rejectCount = tally?.rejectCount ?? 0;
@@ -205,14 +233,17 @@ export function StopsList({
             .filter(Boolean)
             .map(v => String(v).toLowerCase());
           const fallBackVote = (stop.votes || []).find(v => {
-            const keys = [v.userId, v.username, v.email]
+            const keys = [v.userId, v.username, v.userName, v.email]
               .filter(Boolean)
               .map(value => String(value).toLowerCase());
             return keys.some(key => voterKeys.includes(key));
           })?.voteType;
-          const votedByMe = tally?.currentUserVoteType || fallBackVote;
-          const hasVoted = tally?.hasCurrentUserVoted ?? Boolean(votedByMe);
-          const currentStatus = tally?.stopStatus || stop.stopStatus;
+          const votedByMe = tally?.currentUserVoteType || tally?.voteType || fallBackVote;
+          const hasVoted = Boolean(votedByMe);
+          const currentStatus = tally?.stopStatus || stop.stopStatus || "PROPOSED";
+          const displayStatus = STATUS_COLORS[currentStatus] || STATUS_COLORS.PROPOSED  ;
+          const snap  = stop.weatherSnapshot;
+          const emoji = snap ? weatherEmoji(snap.description) : null;
           return (
             <div key={stop.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px", background: "#fafaf8", borderRadius: 10, border: "1px solid #f0f0eb" }}>
               {/* Order badge */}
@@ -228,13 +259,29 @@ export function StopsList({
                   <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 10, background: catStyle.bg, color: catStyle.color }}>
                     {stop.category.charAt(0) + stop.category.slice(1).toLowerCase()}
                   </span>
-                  <span style={{ fontSize: 10, color: stStatus.color, fontWeight: 600 }}>{(STATUS_COLORS[currentStatus] || stStatus).label}</span>
+                  <span style={{ fontSize: 10, color: displayStatus.color, fontWeight: 600 }}>{displayStatus.label}</span>
+                 {snap && (
+                    <span style={{ fontSize: 10, display: "flex", alignItems: "center", gap: 3, padding: "1px 7px", borderRadius: 10, background: "#f0f9ff", color: "#0369a1", fontWeight: 500 }}>
+                      {emoji} {snap.temp}°C
+                      {snap.description && <span style={{ color: "#64748b" }}> · {snap.description}</span>}
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: "flex", gap: 12, fontSize: 11, color: "#9ca3af", flexWrap: "wrap" }}>
                   {stop.location     && <span style={{ display: "flex", alignItems: "center", gap: 3 }}><Icon.MapPin />{stop.location}</span>}
                   {stop.visitDate    && <span>{stop.visitDate}</span>}
                   {stop.durationHours && <span>{stop.durationHours}h</span>}
                   {stop.estimatedCost != null && <span>${parseFloat(stop.estimatedCost).toFixed(2)}</span>}
+                  {snap?.humidity != null && (
+                                      <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#64748b" }}>
+                                        <Icon.Droplet /> {snap.humidity}% Humidity
+                    </span>
+                  )}
+                  {snap?.fetchedAt != null && (
+                    <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#64748b" }}>
+                      Weather Snapshot Fetched {formatWeatherDate(snap.fetchedAt)}
+                    </span>
+                  )}
                 </div>
                 {stop.notes && <div style={{ fontSize: 11, color: "#6b6b62", marginTop: 4, fontStyle: "italic" }}>{stop.notes}</div>}
                 {!stop.mustVisit && (
@@ -245,25 +292,25 @@ export function StopsList({
                       <strong style={{ color: "#1a1a18" }}> {rejectCount}</strong> reject ·
                       <strong style={{ color: "#1a1a18" }}> {abstainCount}</strong> abstain
                     </span>
-                    {hasVoted && <span style={{ fontSize: 10, color: "#16a34a" }}>You already voted</span>}                    {canVote && (
+                    {hasVoted && <span style={{ fontSize: 10, color: "#16a34a" }}>Your vote: {votedByMe}</span>}                    {canVote && (
                       <>
                         <button
                           onClick={() => handleVote(stop.id, "APPROVE")}
-                          disabled={Boolean(voting) || hasVoted}
+                          disabled={Boolean(voting)}
                           style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "APPROVE" ? "#dcfce7" : undefined }}
                         >
                           {voting === `${stop.id}-APPROVE` ? "Voting…" : "✅ Approve"}
                         </button>
                         <button
                           onClick={() => handleVote(stop.id, "REJECT")}
-                          disabled={Boolean(voting) || hasVoted}
+                          disabled={Boolean(voting)}
                           style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "REJECT" ? "#fee2e2" : undefined }}
                         >
                           {voting === `${stop.id}-REJECT` ? "Voting…" : "❌ Reject"}
                         </button>
                         <button
                           onClick={() => handleVote(stop.id, "ABSTAIN")}
-                          disabled={Boolean(voting) || hasVoted}
+                          disabled={Boolean(voting)}
                           style={{ ...S.btnSecondary, fontSize: 10, padding: "4px 8px", background: votedByMe === "ABSTAIN" ? "#e5e7eb" : undefined }}
                         >
                           {voting === `${stop.id}-ABSTAIN` ? "Voting…" : "➖ Abstain"}
@@ -272,7 +319,7 @@ export function StopsList({
                     )}
                   </div>
                 )}              </div>
-              {isContributor && !stop.mustVisit && (
+              {(isOrganizer || (isContributor && !stop.mustVisit)) && (
                 <button
                   onClick={() => handleRemove(stop.id)}
                   disabled={removing === stop.id}

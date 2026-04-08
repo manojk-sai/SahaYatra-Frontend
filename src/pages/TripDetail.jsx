@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { S } from "../styles/theme";
 import { Icon } from "../components/ui/Icons";
 import { Spinner } from "../components/ui/Spinner";
 import { StopsList } from "../components/trips/StopsList";
 import { MembersList } from "../components/trips/MembersList";
 import { api } from "../api/client";
+import { Footer } from "../components/ui/Footer";
 
 const STATUS_FLOW = ["PLANNING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "ARCHIVED"];
 const STATUS_STYLES = {
@@ -25,16 +26,20 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
   const [trip,    setTrip]    = useState(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
-  const [tab,     setTab]     = useState("stops"); // "stops" | "members"
+  const [tab,     setTab]     = useState("stops"); // "stops" | "members" | "weather"
   const [advancing, setAdvancing] = useState(false);
+  const refreshTrip = useCallback( async () => {
+    const latest = await api.getTripById(tripId, token);
+    setTrip(latest);
+    return latest;
+  }, [tripId, token]);
 
   useEffect(() => {
     setLoading(true); setError("");
-    api.getTripById(tripId, token)
-      .then(setTrip)
+    refreshTrip()
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, [tripId, token]);
+  }, [ refreshTrip ]);
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0", color: "#9ca3af", gap: 10 }}>
@@ -74,12 +79,14 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
 
   const handleAddStop = async data => {
     const updated = await api.addStop(trip.id, data, token);
-    setTrip(updated);
+    if (updated?.id) setTrip(updated);
+    else  await refreshTrip();
   };
 
   const handleRemoveStop = async stopId => {
     const updated = await api.removeStop(trip.id, stopId, token);
-    setTrip(updated);
+    if (updated?.id) setTrip(updated);
+    else await refreshTrip();
   };
 
   const handleInvite = async (userId, role) => {
@@ -88,21 +95,26 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
 
   const handleVote = async (stopId, voteType) => {
     const updated = await api.voteStop(trip.id, stopId, voteType, token);
-    setTrip(updated);
-  };
+    if (updated?.id) setTrip(updated);
+    else await refreshTrip();
+ };
 
   const handleAdvance = async () => {
     setAdvancing(true);
     try {
       const updated = await api.advanceTripStatus(trip.id, token);
-      setTrip(updated);
+      if (updated?.id) setTrip(updated);
+      else await refreshTrip();
     } catch (e) {
       setError(e.message);
     } finally {
       setAdvancing(false);
     }
   };
-
+  const tabs = [
+    { key: "stops",   label: `Stops (${(trip.stops || []).length})` },
+    { key: "members", label: `Members (${(trip.members || []).filter(m => m.active !== false).length})` },
+  ];
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", padding: "36px 24px" }}>
 
@@ -173,24 +185,18 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
         </div>
       </div>
 
-      {/* Tabs */}
       <div style={{ display: "flex", gap: 2, marginBottom: 16, background: "#f0f0eb", borderRadius: 9, padding: 3, width: "fit-content" }}>
-        {[
-          { key: "stops",   label: `Stops (${(trip.stops || []).length})`                       },
-          { key: "members", label: `Members (${(trip.members || []).filter(m => m.active !== false).length})` },
-        ].map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+        {tabs.map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
             style={{
               padding: "6px 16px", fontSize: 13, border: "none", cursor: "pointer",
-              borderRadius: 7, fontFamily: "inherit", fontWeight: tab === t.key ? 600 : 400,
+              borderRadius: 7, fontFamily: "inherit",
+              fontWeight: tab === t.key ? 600 : 400,
               background: tab === t.key ? "white" : "transparent",
               color: tab === t.key ? "#1a1a18" : "#6b6b62",
               boxShadow: tab === t.key ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
               transition: "all 0.15s",
-            }}
-          >
+            }}>
             {t.label}
           </button>
         ))}
@@ -221,6 +227,7 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
           />
         )}
       </div>
+    <Footer />
     </div>
   );
 }

@@ -80,7 +80,7 @@ export function Trips({ token, currentUserRef, onOpenTrip }) {
       return keys.some(k => myIdentity.includes(k));
     });
   });
-  const displayed = tab === "my" ? trips : publicTrips;
+  const displayed = tab === "my" ? myTrips : publicTrips;
   const isLoading = tab === "my" ? loading : pubLoading;
 
   return (
