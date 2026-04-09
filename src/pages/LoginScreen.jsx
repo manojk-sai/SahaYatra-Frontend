@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "../api/client";
 import { S } from "../styles/theme";
 import { Input } from "../components/ui/Input";
-import { Spinner } from "../components/ui/Spinner";
+import Spinner from "../components/ui/Spinner";
 import { AuthLeft } from "../components/auth/AuthLeft";
 
 export function LoginScreen({ onLogin, onGoRegister }) {

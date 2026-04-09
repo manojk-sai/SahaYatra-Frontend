@@ -1,7 +1,7 @@
 import { S } from "../../styles/theme";
 import { Icon } from "../ui/Icons";
 
-export function Nav({ user, screen, onNav, onLogout }) {
+export function Nav({ user, screen, onNav, onLogout, unreadCount = 0 }) {
   return (
     <nav style={S.nav}>
       <div style={S.navBrand}>
@@ -16,14 +16,55 @@ export function Nav({ user, screen, onNav, onLogout }) {
         <button style={S.navLink(screen === "trips")} onClick={() => onNav("trips")}>
           My Trips
         </button>
+        {/* Phase 5: Notifications nav link */}
+        <button
+          style={{ ...S.navLink(screen === "notifications"), position: "relative" }}
+          onClick={() => onNav("notifications")}
+        >
+          Notifications
+          {unreadCount > 0 && (
+            <span style={{
+              position: "absolute", top: 2, right: 2,
+              width: 7, height: 7, borderRadius: "50%",
+              background: "#ef4444", border: "1.5px solid white",
+            }} />
+          )}
+        </button>
         <button style={S.navLink(screen === "profile")} onClick={() => onNav("profile")}>
           Profile
         </button>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Bell icon shortcut with unread count badge */}
+        <button
+          onClick={() => onNav("notifications")}
+          title={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
+          style={{
+            position: "relative", background: "none",
+            border: "1px solid #e8e8e3", borderRadius: 7,
+            padding: "5px 8px", cursor: "pointer",
+            color: unreadCount > 0 ? "#1a1a18" : "#6b6b62",
+            display: "flex", alignItems: "center",
+          }}
+        >
+          {unreadCount > 0 ? <Icon.BellDot /> : <Icon.Bell />}
+          {unreadCount > 0 && (
+            <span style={{
+              position: "absolute", top: -5, right: -5,
+              minWidth: 16, height: 16, borderRadius: 8,
+              background: "#ef4444", color: "white",
+              fontSize: 10, fontWeight: 700, fontFamily: "inherit",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "0 3px", border: "1.5px solid white",
+            }}>
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </button>
+
         <div style={{ fontSize: 13, color: "#6b6b62" }}>
-          { user?.username || "User"}
+          {user?.username || "User"}
         </div>
         <div style={{
           width: 32, height: 32, borderRadius: "50%",

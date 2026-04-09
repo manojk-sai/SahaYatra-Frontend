@@ -2,7 +2,7 @@ import { useState } from "react";
 import { S } from "../../styles/theme";
 import { Icon } from "../ui/Icons";
 import { Input } from "../ui/Input";
-import { Spinner } from "../ui/Spinner";
+import Spinner from "../ui/Spinner";
 
 export function CreateTripModal({ onClose, onCreate }) {
   const [form, setForm] = useState({

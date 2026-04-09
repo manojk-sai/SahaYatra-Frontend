@@ -2,7 +2,7 @@ import { useState } from "react";
 import { S } from "../../styles/theme";
 import { Icon } from "../ui/Icons";
 import { Input } from "../ui/Input";
-import { Spinner } from "../ui/Spinner";
+import Spinner from "../ui/Spinner";
 
 const ROLE_STYLES = {
   ORGANIZER:   { bg: "#fef9c3", color: "#a16207", label: "Organizer"   },
@@ -10,7 +10,7 @@ const ROLE_STYLES = {
   VIEWER:      { bg: "#f3f4f6", color: "#4b5563", label: "Viewer"      },
 };
 
-export function MembersList({ members = [], isOrganizer, currentUserId, onInvite }) {
+export default function MembersList({ members = [], isOrganizer, currentUserId, onInvite }) {
   const [showInvite, setShowInvite] = useState(false);
   const [userId,     setUserId]     = useState("");
   const [role,       setRole]       = useState("CONTRIBUTOR");

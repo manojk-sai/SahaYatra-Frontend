@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { S } from "../../styles/theme";
 import { Icon } from "../ui/Icons";
 import { Input } from "../ui/Input";
-import { Spinner } from "../ui/Spinner";
+import Spinner from "../ui/Spinner";
 import { api } from "../../api/client";
+
 const CATEGORY_COLORS = {
   ACCOMMODATION: { bg: "#eff6ff", color: "#1d4ed8" },
   FOOD:          { bg: "#fef9c3", color: "#a16207" },
@@ -106,7 +107,7 @@ function AddStopForm({ onAdd, onCancel, isOrganizer }) {
   );
 }
 
-export function StopsList({ 
+export default function StopsList({ 
   stops = [],
   isContributor,
   isOrganizer,

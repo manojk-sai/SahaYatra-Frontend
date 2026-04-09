@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { S } from "../styles/theme";
 import { Icon } from "../components/ui/Icons";
-import { Spinner } from "../components/ui/Spinner";
+import Spinner from "../components/ui/Spinner";
 import { TripCard } from "../components/trips/TripCard";
 import { CreateTripModal } from "../components/trips/CreateTripModal";
 import { useTrips } from "../hooks/useTrips";

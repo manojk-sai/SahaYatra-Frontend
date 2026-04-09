@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Icon } from "../components/ui/Icons";
 import { S } from "../styles/theme";
 import { Input } from "../components/ui/Input";
-import { Spinner } from "../components/ui/Spinner";
+import Spinner from "../components/ui/Spinner";
 import { api } from "../api/client";
 
 export function Profile({ user, token, onUserUpdate }) {
