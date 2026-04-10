@@ -1,5 +1,6 @@
 import { Icon } from "../ui/Icons";
 import { S } from "../../styles/theme";
+import brandLogo from "../../../public/logo-sy.png";
 
 export function AuthLeft({ mode }) {
   return (
@@ -17,8 +18,7 @@ export function AuthLeft({ mode }) {
 
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 64 }}>
-          <div style={{ color: "#e8e4dc" }}><Icon.Compass /></div>
-          <span style={{ color: "#e8e4dc", fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px" }}>Saha Yatra</span>
+          <img src={brandLogo} alt="Saha Yatra" style={{ width: 170, height: 170, marginRight: 8 }} />
         </div>
 
         <div>

@@ -5,6 +5,7 @@ import Spinner from "../components/ui/Spinner";
 import StopsList from "../components/trips/StopsList";
 import MembersList from "../components/trips/MembersList";
 import { api } from "../api/client";
+import Footer from "../components/ui/Footer";
 
 const STATUS_FLOW = ["PLANNING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "ARCHIVED"];
 const STATUS_STYLES = {
@@ -285,6 +286,7 @@ export function TripDetail({ tripId, token, currentUserRef, onBack }) {
           />
         )}
       </div>
+      <Footer />
     </div>
   );
 }

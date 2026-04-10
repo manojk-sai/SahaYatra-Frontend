@@ -1,18 +1,8 @@
 import { Icon } from "../components/ui/Icons";
 import { S } from "../styles/theme";
 
-export function Dashboard({ user, token, onNav }) {
-  const phases = [
-    { num: 1, name: "Foundation",     status: "done",     detail: "Spring Boot, MongoDB, JWT"        },
-    { num: 2, name: "Trip & Members", status: "done",     detail: "Documents, roles, invite flow"    },
-    { num: 3, name: "Voting",         status: "done",     detail: "Strategy pattern, auto-resolve"   },
-    { num: 4, name: "Weather",        status: "done",     detail: "Async snapshots, scheduled job"   },
-    { num: 5, name: "Notifications",  status: "done",     detail: "Events, itinerary export"         },
-    { num: 6, name: "Deploy",         status: "next",     detail: "Testcontainers, Railway"          },
-  ];
-
+export function Dashboard({ user, onNav }) {
   const endpoints = [
-    // Phase 2
     { method: "POST",   path: "/trips",                          label: "Create trip"          },
     { method: "GET",    path: "/trips/my",                       label: "My trips"             },
     { method: "GET",    path: "/trips/:id",                      label: "Get trip"             },
@@ -21,11 +11,9 @@ export function Dashboard({ user, token, onNav }) {
     { method: "POST",   path: "/trips/:id/invite",               label: "Invite member"        },
     { method: "POST",   path: "/trips/join",                     label: "Accept invite"        },
     { method: "POST",   path: "/trips/:id/advance",              label: "Advance status"       },
-    // Phase 3
     { method: "POST",   path: "/trips/:id/stops/:sid/vote",      label: "Cast vote"            },
     { method: "GET",    path: "/trips/:id/stops/:sid/votes",     label: "Get tally"            },
     { method: "PATCH",  path: "/trips/:id/stops/:sid/status",    label: "Override status"      },
-    // Phase 5
     { method: "GET",    path: "/trips/:id/itinerary",            label: "Get itinerary"        },
     { method: "GET",    path: "/notifications",                  label: "Get notifications"    },
     { method: "PATCH",  path: "/notifications/:id/read",         label: "Mark read"            },
@@ -35,79 +23,103 @@ export function Dashboard({ user, token, onNav }) {
   const methodColor = { GET: "#059669", POST: "#2563eb", PUT: "#d97706", PATCH: "#7c3aed", DELETE: "#dc2626" };
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "36px 24px" }}>
-
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.6px", marginBottom: 4 }}>
+    <div style={{ maxWidth: 1000, margin: "0 auto", padding: "48px 24px", fontFamily: "Inter, -apple-system, sans-serif" }}>
+      
+      {/* Header Section */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 40, borderBottom: "1px solid #f0f0eb", paddingBottom: 24 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#9ca3af", marginBottom: 8 }}>
+            System Overview
+          </div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.6px", marginBottom: 4 }}>
           Good day, {user?.username || user?.profile?.displayName || "traveler"} 👋
         </div>
-        <div style={{ fontSize: 14, color: "#6b6b62" }}>
-          Phase 5 complete — notifications and itinerary export are live.
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+      {/* High-Level Stats Row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 32 }}>
+        <div style={{ ...S.card, padding: "20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#6b6b62", textTransform: "uppercase", marginBottom: 4 }}>Service Status</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 16, fontWeight: 700, color: "#16a34a" }}>
+             <div style={{ width: 8, height: 8, background: "#16a34a", borderRadius: "50%" }} />
+             Operational
+          </div>
+        </div>
+        <div style={{ ...S.card, padding: "20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#6b6b62", textTransform: "uppercase", marginBottom: 4 }}>Gateway</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a18" }}>{endpoints.length} Active Endpoints</div>
+        </div>
+        <div style={{ ...S.card, padding: "20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#6b6b62", textTransform: "uppercase", marginBottom: 4 }}>Latest Build</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a18" }}>v5.0.0-stable</div>
+        </div>
+      </div>
 
-        {/* Roadmap */}
-        <div style={{ ...S.card, gridColumn: "1 / -1" }}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b6b62", marginBottom: 16 }}>Build roadmap</div>
-          <div style={{ display: "flex", position: "relative" }}>
-            {phases.map((p, i) => (
-              <div key={p.num} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-                {i < phases.length - 1 && (
-                  <div style={{ position: "absolute", top: 16, left: "50%", width: "100%", height: 2, background: p.status === "done" ? "#1a1a18" : "#e8e8e3", zIndex: 0 }} />
-                )}
-                <div style={{ width: 32, height: 32, borderRadius: "50%", zIndex: 1, background: p.status === "done" ? "#1a1a18" : p.status === "next" ? "#f5f5f0" : "#f5f5f0", border: p.status === "done" ? "2px solid #1a1a18" : p.status === "next" ? "2px solid #1a1a18" : "2px solid #e2e2dc", display: "flex", alignItems: "center", justifyContent: "center", color: p.status === "done" ? "white" : p.status === "next" ? "#1a1a18" : "#c0c0b8", fontSize: 12, fontWeight: 700, marginBottom: 10 }}>
-                  {p.status === "done" ? <Icon.Check /> : p.num}
-                </div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: p.status === "upcoming" ? "#b0b0a8" : "#1a1a18", textAlign: "center", marginBottom: 2 }}>{p.name}</div>
-                <div style={{ fontSize: 10, color: "#9ca3af", textAlign: "center", lineHeight: 1.4, padding: "0 4px" }}>{p.detail}</div>
-              </div>
-            ))}
+      <div style={{ display: "grid", gridTemplateColumns: "350px 1fr", gap: 24 }}>
+        
+        {/* Left Column: Actions & Docs */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={S.card}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af", marginBottom: 16 }}>Navigation</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button onClick={() => onNav("trips")} style={{ ...S.btnPrimary, padding: "12px", justifyContent: "center", fontSize: 14 }}>
+                <Icon.Map /> Launch Trip Manager
+              </button>
+              <button onClick={() => onNav("notifications")} style={{ ...S.btnSecondary, padding: "12px", justifyContent: "center", fontSize: 14 }}>
+                <Icon.Bell /> System Notifications
+              </button>
+            </div>
+          </div>
+
+          <div style={{ ...S.card, background: "#1a1a18", color: "white" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#6b6b62", textTransform: "uppercase", marginBottom: 12 }}>Developer Resources</div>
+            <div style={{ fontSize: 14, marginBottom: 16, lineHeight: 1.5, color: "#d1d1cc" }}>
+              Comprehensive API documentation including schemas and auth flows.
+            </div>
+            <a href="http://localhost:8080/swagger-ui.html" target="_blank" rel="noopener noreferrer" 
+               style={{ display: "block", textAlign: "center", padding: "10px", background: "white", color: "#1a1a18", borderRadius: 6, textDecoration: "none", fontSize: 13, fontWeight: 700 }}>
+              Open Swagger Docs
+            </a>
           </div>
         </div>
 
-        {/* Quick actions */}
-        <div style={S.card}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b6b62", marginBottom: 14 }}>Quick actions</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <button onClick={() => onNav("trips")} style={{ ...S.btnPrimary, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Icon.Map /> Browse my trips</span>
-              <Icon.ArrowRight />
-            </button>
-            <button onClick={() => onNav("notifications")} style={{ ...S.btnSecondary, display: "flex", alignItems: "center", gap: 8, justifyContent: "center" }}>
-              <Icon.Bell /> View notifications
-            </button>
+        {/* Right Column: Endpoint Registry */}
+        <div style={{ ...S.card, display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9ca3af" }}>Endpoint Registry</div>
+            <span style={{ fontSize: 10, background: "#f5f5f0", padding: "2px 8px", borderRadius: 4, fontWeight: 600 }}>REST API</span>
           </div>
-        </div>
-
-        {/* Endpoints */}
-        <div style={S.card}>
-          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6b6b62", marginBottom: 12 }}>All endpoints</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 220, overflowY: "auto" }}>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: 2, overflowY: "auto", maxHeight: "450px", paddingRight: "8px" }}>
             {endpoints.map(ep => (
-              <div key={ep.path + ep.method} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, fontFamily: "monospace", color: methodColor[ep.method], minWidth: 46 }}>{ep.method}</span>
-                <span style={{ fontSize: 10, fontFamily: "monospace", color: "#374151", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ep.path}</span>
-                <span style={{ fontSize: 10, color: "#9ca3af", whiteSpace: "nowrap" }}>{ep.label}</span>
+              <div key={ep.path + ep.method} style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: 12, 
+                padding: "10px 0", 
+                borderBottom: "1px solid #f7f7f5" 
+              }}>
+                <span style={{ 
+                  fontSize: 10, 
+                  fontWeight: 800, 
+                  fontFamily: "monospace", 
+                  color: "white", 
+                  background: methodColor[ep.method],
+                  padding: "2px 6px",
+                  borderRadius: 3,
+                  minWidth: 48,
+                  textAlign: "center"
+                }}>{ep.method}</span>
+                <span style={{ fontSize: 12, fontFamily: "monospace", color: "#1a1a18", flex: 1 }}>{ep.path}</span>
+                <span style={{ fontSize: 11, color: "#9ca3af" }}>{ep.label}</span>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 10, padding: "7px 10px", background: "#f0fdf4", borderRadius: 6, fontSize: 11, color: "#16a34a", display: "flex", gap: 6, alignItems: "center" }}>
-            <Icon.Check /> {endpoints.length} endpoints live
-          </div>
         </div>
 
-        {/* Swagger */}
-        <div style={{ ...S.card, gridColumn: "1 / -1", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 3 }}>API Documentation</div>
-            <div style={{ fontSize: 12, color: "#6b6b62" }}>Test all Phase 1–5 endpoints in Swagger UI</div>
-          </div>
-          <a href="http://localhost:8080/swagger-ui.html" target="_blank" rel="noopener noreferrer" style={{ ...S.btnSm, textDecoration: "none", padding: "10px 18px", fontSize: 13 }}>
-            Open Swagger UI →
-          </a>
-        </div>
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import { S } from "../../styles/theme";
 import { Icon } from "../ui/Icons";
+import brandLogo from "../../../public/logo-sy.png";
 
 export function Nav({ user, screen, onNav, onLogout, unreadCount = 0 }) {
   return (
     <nav style={S.nav}>
       <div style={S.navBrand}>
-        <div style={{ color: "#1a1a18" }}><Icon.Compass /></div>
+        <img src={brandLogo} alt="Saha Yatra" style={{ width: 32, height: 32, marginRight: 8 }} />
         Saha Yatra
       </div>
 
@@ -17,19 +18,7 @@ export function Nav({ user, screen, onNav, onLogout, unreadCount = 0 }) {
           My Trips
         </button>
         {/* Phase 5: Notifications nav link */}
-        <button
-          style={{ ...S.navLink(screen === "notifications"), position: "relative" }}
-          onClick={() => onNav("notifications")}
-        >
-          Notifications
-          {unreadCount > 0 && (
-            <span style={{
-              position: "absolute", top: 2, right: 2,
-              width: 7, height: 7, borderRadius: "50%",
-              background: "#ef4444", border: "1.5px solid white",
-            }} />
-          )}
-        </button>
+        
         <button style={S.navLink(screen === "profile")} onClick={() => onNav("profile")}>
           Profile
         </button>

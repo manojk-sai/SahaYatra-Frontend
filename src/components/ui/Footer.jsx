@@ -1,4 +1,4 @@
-export function Footer() {
+export default function Footer() {
   return (
     <footer style={{ marginTop: '40px', paddingBottom: '30px', textAlign: 'center' }}>
        <div style={{ 
