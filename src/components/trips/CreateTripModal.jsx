@@ -3,6 +3,7 @@ import { S } from "../../styles/theme";
 import { Icon } from "../ui/Icons";
 import { Input } from "../ui/Input";
 import Spinner from "../ui/Spinner";
+import { ApiError } from "../../api/client";
 
 export function CreateTripModal({ onClose, onCreate }) {
   const [form, setForm] = useState({
@@ -11,18 +12,29 @@ export function CreateTripModal({ onClose, onCreate }) {
   });
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");
+  const [errors, setErrors] = useState({});
 
   const set = k => v => setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!form.title || !form.startDate || !form.endDate) {
-      setError("Title, start date and end date are required."); return;
+    const nextErrors = {};
+    if (!form.title.trim()) nextErrors.title = "Title is required";
+    if (!form.startDate) nextErrors.startDate = "Start date is required";
+    if (!form.endDate) nextErrors.endDate = "End date is required";
+    if (form.startDate && form.endDate && form.startDate > form.endDate) nextErrors.endDate = "End date must be after start date";
+    if (form.budgetCap && Number(form.budgetCap) <= 0) nextErrors.budgetCap = "Budget cap must be a positive number";
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) {
+      setError("Please fix the errors in the form");
+      return;
     }
-    setError(""); setLoading(true);
+
+    setError("");
+    setLoading(true);
     try {
       await onCreate({
-        title:       form.title,
+        title:       form.title.trim(),
         description: form.description || undefined,
         startDate:   form.startDate,
         endDate:     form.endDate,
@@ -32,7 +44,10 @@ export function CreateTripModal({ onClose, onCreate }) {
       });
       onClose();
     } catch (err) {
-      setError(err.message);
+      if(err instanceof ApiError){
+        setError(err.fieldErrors || {});
+      }
+      setError(err.message || "An error occurred while creating the trip");
     } finally {
       setLoading(false);
     }
@@ -52,7 +67,7 @@ export function CreateTripModal({ onClose, onCreate }) {
         {error && <div style={S.error}>{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <Input label="Trip title" value={form.title} onChange={set("title")} placeholder="e.g. Tokyo Adventure" autoFocus />
+          <Input label="Trip title" value={form.title} onChange={set("title")} placeholder="e.g. Tokyo Adventure" error={errors.title} autoFocus />
 
           <div style={S.inputWrap}>
             <label style={S.label}>Description <span style={{ fontWeight: 400, textTransform: "none", color: "#aaa" }}>(optional)</span></label>
@@ -66,12 +81,12 @@ export function CreateTripModal({ onClose, onCreate }) {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Input label="Start date" type="date" value={form.startDate} onChange={set("startDate")} />
-            <Input label="End date"   type="date" value={form.endDate}   onChange={set("endDate")}   />
+            <Input label="Start date" type="date" value={form.startDate} onChange={set("startDate")} error={errors.startDate} />
+            <Input label="End date"   type="date" value={form.endDate}   onChange={set("endDate")}   error={errors.endDate} />
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <Input label="Budget cap ($)" type="number" value={form.budgetCap} onChange={set("budgetCap")} placeholder="0.00" />
+            <Input label="Budget cap ($)" type="number" value={form.budgetCap} onChange={set("budgetCap")} placeholder="0.00" error={errors.budgetCap} />
             <div style={S.inputWrap}>
               <label style={S.label}>Visibility</label>
               <select value={form.visibility} onChange={e => set("visibility")(e.target.value)} style={{ ...S.input }}>

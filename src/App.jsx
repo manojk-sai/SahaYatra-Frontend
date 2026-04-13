@@ -11,7 +11,16 @@ import { Notifications } from "./pages/Notifications";
 import { useNotifications } from "./hooks/useNotifications";
 
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem("rw_token") || "");
+  const isLikelyJwt = (value) => typeof value === "string" && value.split(".").length === 3;
+
+  const [token, setToken] = useState(() => {
+    const storedToken = localStorage.getItem("rw_token") || "";
+    if (storedToken && !isLikelyJwt(storedToken)) {
+      localStorage.removeItem("rw_token");
+      return "";
+    }
+    return storedToken;
+  });
   const [user,  setUser]  = useState(() => {
     try { return JSON.parse(localStorage.getItem("rw_user") || "null"); } catch { return null; }
   });
@@ -35,7 +44,11 @@ export default function App() {
 
   const handleLogin = (tok, usr) => {
     setToken(tok); setUser(usr);
-    localStorage.setItem("rw_token", tok);
+    if (isLikelyJwt(tok)) {
+      localStorage.setItem("rw_token", tok);
+    } else {
+      localStorage.removeItem("rw_token");
+    }
     localStorage.setItem("rw_user", JSON.stringify(usr));
     setScreen("dashboard");
   };

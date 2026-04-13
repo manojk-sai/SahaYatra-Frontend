@@ -4,6 +4,7 @@ import { Icon } from "../ui/Icons";
 import { Input } from "../ui/Input";
 import Spinner from "../ui/Spinner";
 import { api } from "../../api/client";
+import { CitySelector } from "../ui/CitySelector";
 
 const CATEGORY_COLORS = {
   ACCOMMODATION: { bg: "#eff6ff", color: "#1d4ed8" },
@@ -69,7 +70,7 @@ function AddStopForm({ onAdd, onCancel, isOrganizer }) {
       <form onSubmit={handleSubmit}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <Input label="Name" value={form.name} onChange={set("name")} placeholder="e.g. Shinjuku Gyoen" autoFocus />
-          <Input label="Location" value={form.location} onChange={set("location")} placeholder="City or address" />
+          <CitySelector label="Location" value={form.location} onChange={set("location")} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
           <div style={S.inputWrap}>

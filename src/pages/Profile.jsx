@@ -4,6 +4,7 @@ import { S } from "../styles/theme";
 import { Input } from "../components/ui/Input";
 import Spinner from "../components/ui/Spinner";
 import { api } from "../api/client";
+import { CitySelector } from "../components/ui/CitySelector";
 
 export function Profile({ user, token, onUserUpdate }) {
   const [editing, setEditing] = useState(false);
@@ -13,16 +14,83 @@ export function Profile({ user, token, onUserUpdate }) {
     zipCode: user?.profile?.zipCode || "",
   });
   const [loading, setLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+  const normalize = (v) => String(v || "").trim().toLowerCase();
+  const cityMatchesZip = (city, zipLookup) => {
+    const current = normalize(city);
+    const byPrimary = `${normalize(zipLookup.city)}, ${normalize(zipLookup.state)}`;
+    if (current === byPrimary) return true;
+    return (zipLookup.places || []).some(
+      (p) => `${normalize(p.city)}, ${normalize(p.state)}` === current
+    );
+  };
+  const handleZipBlur = async(zipValue) => {
+    const zip = String(zipValue || "").trim();
+    if (!zip) return;
+    setLocationLoading(true);
+    try{
+      const zipLookup = await api.lookupZip(zip);
+      const currentCity = String(form.city || "").trim();
+      if(!currentCity) {
+        setForm((f) => ({ ...f, city: `${zipLookup.city}, ${zipLookup.state}` }));
+      } else if (!cityMatchesZip(currentCity, zipLookup)) {
+        setError("Zipcode does not match the entered city");
+      } else {
+        setError("");
+      }
+    } catch {
+      setError("Invalid US zipcode");
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+  const handleCityChange = async (cityValue) => {
+    set("city")(cityValue);
+    const city = String(cityValue || "").trim();
+    if (!city || form.zipCode) return;
 
+    setLocationLoading(true);
+    try {
+      const cityLookup = await api.lookupZipByCity(city);
+      setForm((f) => ({ ...f, zipCode: cityLookup.zipCode }));
+    } catch {
+      //
+    } finally {
+      setLocationLoading(false);
+    }
+  };
   const handleSave = async () => {
     setError("");
     setLoading(true);
     try {
-      const updated = await api.updateProfile(form, token);
+      let city = String(form.city || "").trim();
+      let zipCode = String(form.zipCode || "").trim();
+
+      if (zipCode) {
+        const zipLookup = await api.lookupCityByZip(zipCode);
+        if (!city) {
+          city = `${zipLookup.city}, ${zipLookup.state}`;
+        } else if (!cityMatchesZip(city, zipLookup)) {
+          setError("Zipcode does not match the selected city.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      if (city && !zipCode) {
+        const cityLookup = await api.lookupZipByCity(city);
+        zipCode = cityLookup.zipCode;
+      }
+
+      const updated = await api.updateProfile({
+        ...form,
+        city,
+        zipCode,
+      }, token);
       onUserUpdate(updated);
       setSuccess(true);
       setEditing(false);
@@ -77,10 +145,10 @@ export function Profile({ user, token, onUserUpdate }) {
 
           <div style={{ display: "flex", gap: 16 }}>
             <div style={{ flex: 2 }}>
-              <Input label="City" value={form.city} onChange={set("city")} placeholder="e.g. New York" />
+              <CitySelector label="City" value={form.city} onChange={handleCityChange} placeholder="e.g. New York" />
             </div>
             <div style={{ flex: 1 }}>
-              <Input label="Zipcode" value={form.zipCode} onChange={set("zipCode")} placeholder="10001" />
+              <Input label="Zipcode" value={form.zipCode} onChange={set("zipCode")} onBlur={handleZipBlur} placeholder={locationLoading ? "Loading..." : "10001"} />
             </div>
           </div>
 

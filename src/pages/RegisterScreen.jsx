@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../api/client";
+import { ApiError, api } from "../api/client";
 import { S } from "../styles/theme";
 import { Input } from "../components/ui/Input";
 import { AuthLeft } from "../components/auth/AuthLeft";
@@ -9,9 +9,9 @@ export function RegisterScreen({ onLogin, onGoLogin }) {
     username: "",
     password: "",
     confirmPassword: "",
-    fullname: "",
+    fullName: "",
     city: "",
-    zipcode: ""
+    zipCode: ""
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -19,13 +19,21 @@ export function RegisterScreen({ onLogin, onGoLogin }) {
 
   const set = (k) => (v) => setForm(f => ({ ...f, [k]: v }));
 
+  const mapBackendErrors = (fieldErrors = {}) => ({
+    username: fieldErrors.username,
+    password: fieldErrors.password,
+    fullName: fieldErrors.fullName,
+    city: fieldErrors.city,
+    zipCode: fieldErrors.zipCode,
+  });
+
   const validate = () => {
     const e = {};
     if (!form.username) e.username = "Username is required";
     if (!form.password) e.password = "Password is required";
     else if (form.password.length < 8) e.password = "At least 8 characters";
     if (form.password !== form.confirmPassword) e.confirmPassword = "Passwords do not match";
-    if (!form.zipcode) e.zipcode = "Zipcode is required";
+    if (!form.zipCode) e.zipCode = "Zipcode is required";
     // Fullname and City are optional, so no validation needed here
     return e;
   };
@@ -36,21 +44,35 @@ export function RegisterScreen({ onLogin, onGoLogin }) {
     setErrors(e2);
     if (Object.keys(e2).length) return;
 
-    setApiError(""); 
+    setApiError("");
+    setErrors({});
     setLoading(true);
     try {
-      // Sending data to your POST /auth/register endpoint
-      const data = await api.register( {
+      // Sending data to POST /auth/register endpoint
+      const data = await api.register({
         username: form.username,
         password: form.password,
-        fullname: form.fullname,
+        fullName: form.fullName,
         city: form.city,
-        zipcode: form.zipcode,
+        zipCode: form.zipCode,
       });
       // Auto-login after successful registration
-      onLogin(data.token || data.jwt, data.user || { username: form.username });
+      const token = data.token || data.jwt;
+      if (token) {
+        const currentUser = await api.getCurrentUser(token);
+        onLogin(token, currentUser);
+      } else {
+        const loginData = await api.login(form.username, form.password);
+        const loginToken = loginData.token || loginData.jwt;
+        const currentUser = await api.getCurrentUser(loginToken);
+        onLogin(loginToken, currentUser);
+      }
     } catch (err) {
-      setApiError(err.message);
+      if (err instanceof ApiError) {
+        setErrors(prev => ({ ...prev, ...mapBackendErrors(err.fieldErrors) }));
+      } else {
+        setApiError(err.message || "An error occurred while registering.");
+      }
     } finally {
       setLoading(false);
     }
@@ -75,10 +97,10 @@ export function RegisterScreen({ onLogin, onGoLogin }) {
 
           <form onSubmit={handleSubmit}>
             <Input label="Username" value={form.username} onChange={set("username")} placeholder="johndoe" error={errors.username} autoFocus />
-            <Input label="Full Name (Optional)" value={form.fullname} onChange={set("fullname")} placeholder="John Doe" />
+            <Input label="Full Name (Optional)" value={form.fullName} onChange={set("fullName")} placeholder="John Doe" error={errors.fullName} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-              <Input label="City (Optional)" value={form.city} onChange={set("city")} placeholder="New York" />
-              <Input label="Zipcode" value={form.zipcode} onChange={set("zipcode")} placeholder="10001" error={errors.zipcode} />
+              <Input label="City (Optional)" value={form.city} onChange={set("city")} placeholder="New York" error={errors.city} />
+              <Input label="Zipcode" value={form.zipCode} onChange={set("zipCode")} placeholder="10001" error={errors.zipCode} />
             </div>
 
             <Input label="Password" type="password" value={form.password} onChange={set("password")} placeholder="Min. 8 characters" error={errors.password} />

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Icon } from "./Icons";
 import { S } from "../../styles/theme.js";
 
-export function Input({ label, type = "text", value, onChange, placeholder, error, autoFocus }) {
+export function Input({ label, type = "text", value, onChange, placeholder, error, autoFocus, onBlur }) {
   const [showPwd, setShowPwd] = useState(false);
   const [focused, setFocused] = useState(false);
   const isPassword = type === "password";
@@ -18,7 +18,9 @@ export function Input({ label, type = "text", value, onChange, placeholder, erro
           placeholder={placeholder}
           autoFocus={autoFocus}
           onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
+          onBlur={(e) => {setFocused(false);
+            onBlur?.(e.target.value);
+          }}
           style={{
             ...S.input,
             borderColor: error ? "#fca5a5" : focused ? "#1a1a18" : "#e2e2dc",

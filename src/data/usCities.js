@@ -1,0 +1,21 @@
+export const US_CITIES = [
+  "Albuquerque, NM", "Anaheim, CA", "Anchorage, AK", "Arlington, TX", "Atlanta, GA",
+  "Aurora, CO", "Austin, TX", "Bakersfield, CA", "Baltimore, MD", "Baton Rouge, LA",
+  "Boise, ID", "Boston, MA", "Buffalo, NY", "Charlotte, NC", "Chandler, AZ",
+  "Chesapeake, VA", "Chicago, IL", "Chula Vista, CA", "Cincinnati, OH", "Cleveland, OH",
+  "Colorado Springs, CO", "Columbus, OH", "Corpus Christi, TX", "Dallas, TX", "Denver, CO",
+  "Des Moines, IA", "Detroit, MI", "Durham, NC", "El Paso, TX", "Fort Wayne, IN",
+  "Fort Worth, TX", "Fremont, CA", "Fresno, CA", "Garland, TX", "Gilbert, AZ",
+  "Glendale, AZ", "Greensboro, NC", "Hialeah, FL", "Honolulu, HI", "Houston, TX",
+  "Indianapolis, IN", "Irvine, CA", "Irving, TX", "Jacksonville, FL", "Jersey City, NJ",
+  "Kansas City, MO", "Las Vegas, NV", "Laredo, TX", "Lexington, KY", "Lincoln, NE",
+  "Long Beach, CA", "Los Angeles, CA", "Louisville, KY", "Lubbock, TX", "Madison, WI",
+  "Memphis, TN", "Mesa, AZ", "Miami, FL", "Milwaukee, WI", "Minneapolis, MN",
+  "Nashville, TN", "New Orleans, LA", "New York, NY", "Newark, NJ", "Norfolk, VA",
+  "North Las Vegas, NV", "Oakland, CA", "Oklahoma City, OK", "Omaha, NE", "Orlando, FL",
+  "Philadelphia, PA", "Phoenix, AZ",
+  "San Antonio, TX", "San Diego, CA", "San Francisco, CA", "San Jose, CA", "Santa Ana, CA",
+  "Scottsdale, AZ", "Seattle, WA", "Spokane, WA", "St. Louis, MO", "St. Paul, MN",
+  "St. Petersburg, FL", "Stockton, CA", "Tampa, FL", "Toledo, OH", "Tucson, AZ",
+  "Tulsa, OK", "Virginia Beach, VA", "Washington, DC", "Wichita, KS", "Winston-Salem, NC"
+];
