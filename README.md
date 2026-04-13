@@ -2,7 +2,7 @@
 
 > **Collaborative travel route planning** — React 18 · Vite · Inter UI · Phase 1–5 complete
 
-A full-featured React SPA for planning trips collaboratively. Members propose stops, vote on them, track weather, and view day-grouped itineraries. Connects to the [Saha Yatra Backend API](../saha-yatra-backend).
+A full-featured React SPA for planning trips collaboratively. Members propose stops, vote on them, track weather, and view day-grouped itineraries. Connects to the [Saha Yatra Backend API](https://github.com/manojk-sai/SahaYatra).
 
 ---
 
