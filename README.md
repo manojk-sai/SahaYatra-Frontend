@@ -210,7 +210,7 @@ Each page fetches its own data on mount. No global store (Redux/Zustand) is need
 ### Prerequisites
 - Node.js 18+
 - npm or yarn
-- [Saha Yatra Backend](../saha-yatra-backend) running on port 8080
+- [Saha Yatra Backend]((https://github.com/manojk-sai/SahaYatra)) running on port 8080
 
 ### 1 — Clone and install
 
